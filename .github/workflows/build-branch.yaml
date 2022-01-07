@@ -2,11 +2,9 @@ name: KLIO branch build
 
 on:
   push:
-    tags:
-      - v*
     branches:
       - main
-      - develop
+      - 'releases/**'
 permissions:
   contents: read
 
@@ -23,13 +21,13 @@ jobs:
           version: latest
 
   build:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-    runs-on: ${{ matrix.os }}
+          - darwin
+          - linux
+          - windows
     steps:
       - uses: actions/checkout@v2
 
@@ -39,7 +37,13 @@ jobs:
           go-version: 1.16
 
       - name: Build
-        run: go build -v ./cmd/klio/...
+        env:
+          GOOS_VAR: ${{ matrix.os }}
+          OS: ${{ matrix.os }}
+          TAG: ${{ github.ref_name }}
+        run: | 
+          GOOS=$GOOS_VAR go build -o klio-$TAG-$OS ./cmd/klio/...
+          ls klio-$TAG-$OS
 
   test:
     strategy:
