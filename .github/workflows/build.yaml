@@ -39,7 +39,11 @@ jobs:
           go-version: 1.16
 
       - name: Build
-        run: GOOS=$${{ matrix.os }} go build -v ./cmd/klio/... -o klio-$${{ github.ref_name }}-$${{ matrix.os }}
+        env:
+          GOOS_VAR: ${{ matrix.os }}
+          OS: ${{ matrix.os }}
+          TAG: ${{ github.ref_name }}
+        run: GOOS=$GOOS_VAR go build -o klio-$TAG-$OS ./cmd/klio/...
 
       - name: Push
         if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name,'v') }}
