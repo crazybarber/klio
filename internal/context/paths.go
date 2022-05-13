@@ -1,77 +1,68 @@
 package context
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 	"path"
 	"path/filepath"
 )
 
-func discoverPaths(cfg CLIConfig) Paths {
-	result := Paths{}
-	homeDir := getHomeDirPath()
-
-	if homeDir != "" {
-		result.GlobalInstallDir = path.Join(homeDir, cfg.InstallDirName)
+func assemblePaths(cfg CLIConfig) (Paths, error) {
+	homeDir, err := getHomeDirPath()
+	if err != nil {
+		return Paths{}, err
 	}
 
-	result.ProjectConfigFile = findProjectConfigFile(homeDir, cfg.ProjectConfigFileName)
-
-	if result.ProjectConfigFile != "" {
-		result.ProjectInstallDir = path.Join(filepath.Dir(result.ProjectConfigFile), cfg.InstallDirName)
+	projectDir, err := getProjectDir(cfg.ProjectConfigFileName)
+	if err != nil {
+		return Paths{}, err
 	}
 
-	return result
+	return Paths{
+		ProjectConfigFile: path.Join(projectDir, cfg.ProjectConfigFileName),
+		ProjectInstallDir: path.Join(projectDir, cfg.InstallDirName),
+		GlobalInstallDir:  path.Join(homeDir, cfg.InstallDirName),
+	}, nil
 }
 
-// UserHomeDir returns home directory of current user.
-func getHomeDirPath() string {
+// getHomeDirPath returns home directory of current user.
+func getHomeDirPath() (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("can't determine current user")
 	}
 
 	homeDir, err := filepath.EvalSymlinks(currentUser.HomeDir)
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("can't fetch user directory %s", currentUser.HomeDir)
 	}
 
-	return homeDir
+	return homeDir, nil
 }
 
-// ProjectRootDir returns root directory (directory containing klio.yaml file)
-// for a current project.
-func findProjectConfigFile(homeDir string, projectConfigFileName string) string {
-	dir, err := os.Getwd()
+func getProjectDir(configFileName string) (string, error) {
+	workDir, err := getWorkDirPath()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	dir, err = filepath.EvalSymlinks(dir)
+	for dir := workDir; dir != "/"; dir = path.Dir(dir) {
+		projectConfigPath := path.Join(dir, configFileName)
+		if _, err := os.Stat(projectConfigPath); err == nil {
+			return dir, nil
+		}
+	}
 
+	return "", fmt.Errorf("packages can be installed locally only under project directory, use \"--global\"")
+}
+
+// getWorkDirPath returns home directory of current user.
+func getWorkDirPath() (string, error) {
+	wd, err := os.Getwd()
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("can't determine working directory; %s", err)
 	}
 
-	for {
-		// Home directory cannot be a project directory
-		if dir == homeDir {
-			break
-		}
-
-		// Root directory of the filesystem cannot be a project directory
-		if dir == filepath.Dir(dir) {
-			break
-		}
-
-		// Project directory must contain klio.yaml file
-		path := filepath.Join(dir, projectConfigFileName)
-		if file, err := os.Stat(path); err == nil && !file.IsDir() {
-			return path
-		}
-
-		dir = filepath.Dir(dir)
-	}
-
-	return ""
+	return wd, nil
 }

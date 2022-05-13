@@ -3,6 +3,7 @@ package schema
 import (
 	"testing"
 
+	"github.com/g2a-com/klio/internal/config"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
@@ -15,7 +16,7 @@ func TestNewDefaultProjectConfig(t *testing.T) {
 		{
 			name: "should return default project config values",
 			want: &ProjectConfig{
-				Meta:            Metadata{},
+				Meta:            config.Metadata{},
 				DefaultRegistry: "",
 				Dependencies:    nil,
 				yaml: &yaml.Node{

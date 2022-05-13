@@ -9,8 +9,11 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/schollz/progressbar/v3 v3.8.5
+	github.com/spf13/afero v1.8.0
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20220126173729-e04a8579fee6 // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0

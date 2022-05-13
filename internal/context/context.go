@@ -20,9 +20,14 @@ type Paths struct {
 	GlobalInstallDir  string
 }
 
-func NewCLIContext(cfg CLIConfig) CLIContext {
+func Initialize(cfg CLIConfig) (CLIContext, error) {
+	paths, err := assemblePaths(cfg)
+	if err != nil {
+		return CLIContext{}, err
+	}
+
 	return CLIContext{
 		Config: cfg,
-		Paths:  discoverPaths(cfg),
-	}
+		Paths:  paths,
+	}, nil
 }
